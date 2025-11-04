@@ -73,6 +73,12 @@ p {
   margin: 0 auto;
 }
 
+#gameContainer h1 {
+  display: block;
+  text-align: center;
+  margin: 20px auto;
+}
+
 #canvasContainer {
   position: relative;
   display: block;

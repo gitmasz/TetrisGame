@@ -21,6 +21,7 @@
 
 <body>
   <div id="gameContainer">
+    <h1>Tetris Game</h1>
     <div id="gameResults">
       Score : <span id="gameScore">0</span>
     </div>

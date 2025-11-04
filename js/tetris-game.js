@@ -3,8 +3,8 @@ const tetrisGame = () => {
   const scoreDisplay = document.getElementById('gameScore');
   const canvas = document.getElementById('gameBoard');
   const ctx = canvas?.getContext('2d');
-  if (!gameResults || !scoreDisplay || !canvasContainer || !canvas || !ctx) {
-    console.error('Missing DOM elements: #gameResults, #gameScore, #canvasContainer and #gameBoard');
+  if (!gameResults || !scoreDisplay || !canvas || !ctx) {
+    console.error('Missing DOM elements: #gameResults, #gameScore and #gameBoard');
     return;
   }
 
