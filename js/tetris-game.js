@@ -424,6 +424,8 @@ const tetrisGame = () => {
     if (running) requestAnimationFrame(loop);
   };
 
+  const gamekeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
+
   const keymap = new Map([
     ['ArrowLeft', () => { current.moveLeft(); dropStart = performance.now(); }],
     ['ArrowRight', () => { current.moveRight(); dropStart = performance.now(); }],
@@ -433,6 +435,13 @@ const tetrisGame = () => {
   ]);
 
   const onKeyDown = (e) => {
+    if (gamekeys.has(e.key)) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+
+    if (!running) return;
+
     const handler = keymap.get(e.key);
     if (handler) handler();
   };
@@ -620,7 +629,7 @@ const tetrisGame = () => {
   const init = () => {
     renderAll();
     updateCanvasScale();
-    window.addEventListener('keydown', onKeyDown, { passive: true });
+    window.addEventListener('keydown', onKeyDown, { passive: false });
     setupPointerControls();
     requestAnimationFrame(loop);
 

@@ -58,10 +58,14 @@ h2,
 h3,
 h4,
 h5,
-h6,
-p {
+h6 {
   display: block;
   margin: 0;
+}
+
+p {
+  display: block;
+  margin: 20px auto;
 }
 
 #gameContainer {
@@ -119,6 +123,7 @@ p {
 
 #gameResults .game-result p {
   display: block;
+  margin: 0;
   font-weight: 400;
   font-size: 14px;
   line-height: 22px;
