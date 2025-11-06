@@ -1,10 +1,10 @@
 const tetrisGame = () => {
   const gameResults = document.getElementById('gameResults');
-  const scoreDisplay = document.getElementById('gameScore');
-  const canvas = document.getElementById('gameBoard');
-  const ctx = canvas?.getContext('2d');
-  if (!gameResults || !scoreDisplay || !canvas || !ctx) {
-    console.error('Missing DOM elements: #gameResults, #gameScore and #gameBoard');
+  const gameScore = document.getElementById('gameScore');
+  const gameBoard = document.getElementById('gameBoard');
+  const ctx = gameBoard?.getContext('2d');
+  if (!gameResults || !gameScore || !gameBoard || !ctx) {
+    console.error('Missing DOM elements: #gameResults, #gameScore or #gameBoard');
     return;
   }
 
@@ -406,7 +406,7 @@ const tetrisGame = () => {
     }
   };
 
-  const updateScore = () => { scoreDisplay.textContent = String(score); };
+  const updateScore = () => { gameScore.textContent = String(score); };
 
   let dropStart = performance.now();
   let running = true;
@@ -505,7 +505,7 @@ const tetrisGame = () => {
     let startX = null, startY = null, dragging = false;
 
     const getLocalPos = (clientX, clientY) => {
-      const rect = canvas.getBoundingClientRect();
+      const rect = gameBoard.getBoundingClientRect();
       return { x: clientX - rect.left, y: clientY - rect.top };
     };
 
@@ -567,25 +567,25 @@ const tetrisGame = () => {
       renderAll();
     };
 
-    canvas.addEventListener('mousedown', pointerHandlers.onMouseDown, { passive: true });
-    canvas.addEventListener('mousemove', pointerHandlers.onMouseMove, { passive: true });
-    canvas.addEventListener('mouseup', pointerHandlers.onMouseUp, { passive: true });
-    canvas.addEventListener('mouseleave', pointerHandlers.onMouseLeave, { passive: true });
+    gameBoard.addEventListener('mousedown', pointerHandlers.onMouseDown, { passive: true });
+    gameBoard.addEventListener('mousemove', pointerHandlers.onMouseMove, { passive: true });
+    gameBoard.addEventListener('mouseup', pointerHandlers.onMouseUp, { passive: true });
+    gameBoard.addEventListener('mouseleave', pointerHandlers.onMouseLeave, { passive: true });
 
-    canvas.addEventListener('touchstart', pointerHandlers.onTouchStart, { passive: false });
-    canvas.addEventListener('touchmove', pointerHandlers.onTouchMove, { passive: false });
-    canvas.addEventListener('touchend', pointerHandlers.onTouchEnd, { passive: false });
+    gameBoard.addEventListener('touchstart', pointerHandlers.onTouchStart, { passive: false });
+    gameBoard.addEventListener('touchmove', pointerHandlers.onTouchMove, { passive: false });
+    gameBoard.addEventListener('touchend', pointerHandlers.onTouchEnd, { passive: false });
   };
 
-  const updateCanvasScale = () => {
+  const updateGameBoardScale = () => {
     const dpr = window.devicePixelRatio || 1;
 
-    const cssWidth = canvas.clientWidth || canvas.offsetWidth || 348;
+    const cssWidth = gameBoard.clientWidth || gameBoard.offsetWidth || 348;
     const newSQ = Math.max(12, Math.floor(cssWidth / COLS));
     SQ = newSQ;
 
-    canvas.width = Math.floor(newSQ * COLS * dpr);
-    canvas.height = Math.floor(newSQ * ROWS * dpr);
+    gameBoard.width = Math.floor(newSQ * COLS * dpr);
+    gameBoard.height = Math.floor(newSQ * ROWS * dpr);
 
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
@@ -597,14 +597,14 @@ const tetrisGame = () => {
 
     window.removeEventListener('keydown', onKeyDown);
 
-    if (pointerHandlers.onMouseDown) canvas.removeEventListener('mousedown', pointerHandlers.onMouseDown);
-    if (pointerHandlers.onMouseMove) canvas.removeEventListener('mousemove', pointerHandlers.onMouseMove);
-    if (pointerHandlers.onMouseUp) canvas.removeEventListener('mouseup', pointerHandlers.onMouseUp);
-    if (pointerHandlers.onMouseLeave) canvas.removeEventListener('mouseleave', pointerHandlers.onMouseLeave);
+    if (pointerHandlers.onMouseDown) gameBoard.removeEventListener('mousedown', pointerHandlers.onMouseDown);
+    if (pointerHandlers.onMouseMove) gameBoard.removeEventListener('mousemove', pointerHandlers.onMouseMove);
+    if (pointerHandlers.onMouseUp) gameBoard.removeEventListener('mouseup', pointerHandlers.onMouseUp);
+    if (pointerHandlers.onMouseLeave) gameBoard.removeEventListener('mouseleave', pointerHandlers.onMouseLeave);
 
-    if (pointerHandlers.onTouchStart) canvas.removeEventListener('touchstart', pointerHandlers.onTouchStart);
-    if (pointerHandlers.onTouchMove) canvas.removeEventListener('touchmove', pointerHandlers.onTouchMove);
-    if (pointerHandlers.onTouchEnd) canvas.removeEventListener('touchend', pointerHandlers.onTouchEnd);
+    if (pointerHandlers.onTouchStart) gameBoard.removeEventListener('touchstart', pointerHandlers.onTouchStart);
+    if (pointerHandlers.onTouchMove) gameBoard.removeEventListener('touchmove', pointerHandlers.onTouchMove);
+    if (pointerHandlers.onTouchEnd) gameBoard.removeEventListener('touchend', pointerHandlers.onTouchEnd);
 
     horizontalPreview = null;
   };
@@ -628,13 +628,13 @@ const tetrisGame = () => {
 
   const init = () => {
     renderAll();
-    updateCanvasScale();
+    updateGameBoardScale();
     window.addEventListener('keydown', onKeyDown, { passive: false });
     setupPointerControls();
     requestAnimationFrame(loop);
 
-    window.addEventListener('resize', updateCanvasScale);
-    window.addEventListener('orientationchange', updateCanvasScale);
+    window.addEventListener('resize', updateGameBoardScale);
+    window.addEventListener('orientationchange', updateGameBoardScale);
   };
 
   init();
@@ -653,7 +653,7 @@ const tetrisGame = () => {
       dropStart = performance.now();
       horizontalPreview = null;
       renderAll();
-      updateCanvasScale();
+      updateGameBoardScale();
       running = true;
       requestAnimationFrame(loop);
     },
