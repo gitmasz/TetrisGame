@@ -12,6 +12,7 @@ JavaScript version of Tetris Game created using canvas element.
 8. As an element falls, rotates, or moves, a landing ghost appears, showing where it will land after it drops.
 9. As you move an element sideways with the mouse or touch, a horizontal ghost appears, showing where it will land after you release the mouse button (for mouse controls) or your finger (for touch controls).
 10. The score is updated continuously. At the end of the game, the number of cleared lines is also displayed.
+11. The game can be switched to full-screen mode (only the canvas, removing everything unnecessary for gameplay). Once you've finished playing, full-screen mode automatically deactivates, displaying a "Game Over" message along with a gameplay summary.
 
 ## Game controls:
 1. By keyboard: Up Arrow (rotate element), Left Arrow (move element to the left by one square), Right Arrow (move element to the right by one square), Down Arrow (move element down by one square), Space (drops element to the bottom immediately)

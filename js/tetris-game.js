@@ -2,9 +2,10 @@ const tetrisGame = () => {
   const gameResults = document.getElementById('gameResults');
   const gameScore = document.getElementById('gameScore');
   const gameBoard = document.getElementById('gameBoard');
+  const fullscreenBTN = document.getElementById('fullscreen');
   const ctx = gameBoard?.getContext('2d');
-  if (!gameResults || !gameScore || !gameBoard || !ctx) {
-    console.error('Missing DOM elements: #gameResults, #gameScore or #gameBoard');
+  if (!gameResults || !gameScore || !gameBoard || !fullscreenBTN || !ctx) {
+    console.error('Missing DOM elements: #gameResults, #gameScore, #fullscreenBTN or #gameBoard');
     return;
   }
 
@@ -13,7 +14,17 @@ const tetrisGame = () => {
 
   let SQ = 29;
   const VACANT = '#ffffff';
-  const STROKE = '#f8f8f8';
+  let STROKE = '#f8f8f8';
+
+  if (fullscreenBTN && gameBoard) {
+    fullscreenBTN.addEventListener('click', () => {
+      if (isFullscreen(gameBoard)) {
+        fullscreenOff(gameBoard);
+      } else {
+        fullscreenOn(gameBoard);
+      }
+    });
+  }
 
   const drawSquare = (x, y, color) => {
     ctx.lineWidth = 1;
@@ -579,14 +590,34 @@ const tetrisGame = () => {
 
   const updateGameBoardScale = () => {
     const dpr = window.devicePixelRatio || 1;
+    const isFS = typeof isFullscreen === 'function' && isFullscreen(gameBoard);
 
-    const cssWidth = gameBoard.clientWidth || gameBoard.offsetWidth || 348;
-    const newSQ = Math.max(12, Math.floor(cssWidth / COLS));
-    SQ = newSQ;
+    let cssW, cssH, sq;
 
-    gameBoard.width = Math.floor(newSQ * COLS * dpr);
-    gameBoard.height = Math.floor(newSQ * ROWS * dpr);
+    if (isFS) {
+      const vw = Math.max(1, window.innerWidth);
+      const vh = Math.max(1, window.innerHeight);
+      sq = Math.max(8, Math.floor(Math.min(vw / COLS, vh / ROWS)));
 
+      cssW = sq * COLS;
+      cssH = sq * ROWS;
+
+      gameBoard.style.width = cssW + 'px';
+      gameBoard.style.height = cssH + 'px';
+      gameBoard.style.margin = '0 auto';
+    } else {
+      const availW = gameBoard.clientWidth || gameBoard.offsetWidth || 348;
+      sq = Math.max(8, Math.floor(availW / COLS));
+      cssW = sq * COLS;
+      cssH = sq * ROWS;
+
+      gameBoard.style.width = '100%';
+      gameBoard.style.height = cssH + 'px';
+    }
+
+    SQ = sq;
+    gameBoard.width = Math.floor(cssW * dpr);
+    gameBoard.height = Math.floor(cssH * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
     renderAll();
@@ -623,6 +654,7 @@ const tetrisGame = () => {
 
   const endGame = () => {
     stopGame();
+    try { fullscreenOff(gameBoard); } catch (e) { }
     showGameResult();
   };
 
@@ -635,6 +667,18 @@ const tetrisGame = () => {
 
     window.addEventListener('resize', updateGameBoardScale);
     window.addEventListener('orientationchange', updateGameBoardScale);
+
+    const onFullScreenChange = () => {
+      if (typeof isFullscreen === 'function' && isFullscreen(gameBoard)) {
+        STROKE = '#eeeeee';
+      } else {
+        STROKE = '#f8f8f8';
+      }
+      updateGameBoardScale();
+    };
+    document.addEventListener('fullscreenchange', onFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+    document.addEventListener('msfullscreenchange', onFullScreenChange);
   };
 
   init();
@@ -658,6 +702,46 @@ const tetrisGame = () => {
       requestAnimationFrame(loop);
     },
   };
+};
+
+const isFullscreen = (el) =>
+  document.fullscreenElement === el ||
+  document.webkitFullscreenElement === el ||
+  document.msFullscreenElement === el;
+
+const fullscreenOn = (canvas) => {
+  if (!canvas) return false;
+  if (isFullscreen(canvas)) return true;
+
+  const req =
+    canvas.requestFullscreen ||
+    canvas.webkitRequestFullscreen ||
+    canvas.msRequestFullscreen;
+
+  if (typeof req === 'function') {
+    req.call(canvas);
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+    return true;
+  }
+  console.warn('Fullscreen API not supported');
+  return false;
+};
+
+const fullscreenOff = (canvas) => {
+  if (!isFullscreen(canvas)) return true;
+
+  const exit =
+    document.exitFullscreen ||
+    document.webkitExitFullscreen ||
+    document.msExitFullscreen;
+
+  if (typeof exit === 'function') {
+    exit.call(document);
+    setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+    return true;
+  }
+  console.warn('Fullscreen exit API not supported');
+  return false;
 };
 
 document.addEventListener('DOMContentLoaded', () => { tetrisGame(); });

@@ -83,7 +83,7 @@ p {
   margin: 20px auto;
 }
 
-#canvasContainer {
+#gameBoardContainer {
   position: relative;
   display: block;
   width: 100%;
@@ -96,12 +96,39 @@ p {
   background: #fff;
 }
 
-#gameBoard {
+#gameBoardSettings {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
   position: relative;
+  padding: 5px;
+  margin-bottom: 8px;
+  background: #f8f8f8;
+}
+
+#fullscreen {
   display: block;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  overflow: hidden;
+  background-color: transparent;
+  background-image: none;
+  background-position: top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  border: none;
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  border-radius: 0;
+}
+
+#fullscreen svg {
+  display: block;
+  position: relative;
   width: 100%;
-  height: auto;
-  margin: 0 auto;
+  height: 100%;
 }
 
 #gameResults {
@@ -128,4 +155,13 @@ p {
   font-size: 14px;
   line-height: 22px;
   letter-spacing: 0px;
+}
+
+#gameBoard {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: auto;
+  margin: 0 auto;
+  background-color: #fff;
 }
