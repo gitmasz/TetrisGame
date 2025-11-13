@@ -2,12 +2,105 @@ const tetrisGame = () => {
   const gameResults = document.getElementById('gameResults');
   const gameScore = document.getElementById('gameScore');
   const gameBoard = document.getElementById('gameBoard');
-  const fullscreenBTN = document.getElementById('fullscreen');
+  const fullscreenBtn = document.getElementById('fullscreen');
+  const muteBtn = document.getElementById('muteSounds');
   const ctx = gameBoard?.getContext('2d');
-  if (!gameResults || !gameScore || !gameBoard || !fullscreenBTN || !ctx) {
-    console.error('Missing DOM elements: #gameResults, #gameScore, #fullscreenBTN or #gameBoard');
+  if (!gameResults || !gameScore || !gameBoard || !ctx) {
+    console.error('Missing DOM elements: #gameResults, #gameScore or #gameBoard');
     return;
   }
+
+  const SOUND_PATH = 'sounds/';
+
+  let isMuted = false;
+
+  const muteSounds = (mute) => {
+    isMuted = mute;
+
+    if (isMuted) {
+      Object.values(soundBank).forEach(audio => {
+        try {
+          audio.pause();
+        } catch (e) {
+          console.warn(e)
+        }
+      });
+    }
+  };
+
+  const preloadSounds = () => {
+    Object.values(soundBank).forEach((audio) => {
+      try {
+        audio.load();
+      } catch (e) {
+        console.warn(e)
+      }
+    });
+  };
+
+  const createSound = (name) => {
+    const audio = document.createElement('audio');
+    audio.preload = 'auto';
+
+    const sources = [
+      { ext: 'ogg', type: 'audio/ogg' },
+      { ext: 'mp3', type: 'audio/mpeg' },
+    ];
+
+    sources.forEach(({ ext, type }) => {
+      const src = document.createElement('source');
+      src.src = `${SOUND_PATH}${name}.${ext}`;
+      src.type = type;
+      audio.appendChild(src);
+    });
+
+    return audio;
+  };
+
+  const soundBank = {
+    place: createSound('place'),
+    drop: createSound('drop'),
+    clear: createSound('clear'),
+    multiclear: createSound('multiclear'),
+    end: createSound('end'),
+  };
+
+  const playSound = (name) => {
+    if (isMuted) return;
+
+    const audio = soundBank[name];
+    if (!audio) return;
+    try {
+      audio.currentTime = 0;
+      const promise = audio.play();
+      if (promise && typeof promise.catch === 'function') {
+        promise.catch(() => { });
+      }
+    } catch (e) {
+      console.warn(e)
+    }
+  };
+
+  const clearSounds = () => {
+    Object.values(soundBank).forEach(audio => {
+      try {
+        audio.pause();
+        audio.currentTime = 0;
+      } catch (e) {
+        console.warn(e)
+      }
+    });
+  };
+
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      muteBtn.classList.toggle('active');
+
+      const muted = muteBtn.classList.contains('active');
+      muteSounds(muted);
+    });
+  };
+
 
   const ROWS = 22;
   const COLS = 12;
@@ -16,8 +109,8 @@ const tetrisGame = () => {
   const VACANT = '#ffffff';
   let STROKE = '#f8f8f8';
 
-  if (fullscreenBTN && gameBoard) {
-    fullscreenBTN.addEventListener('click', () => {
+  if (fullscreenBtn && gameBoard) {
+    fullscreenBtn.addEventListener('click', () => {
       if (isFullscreen(gameBoard)) {
         fullscreenOff(gameBoard);
       } else {
@@ -338,9 +431,12 @@ const tetrisGame = () => {
 
     const moveDown = () => {
       if (!move(0, 1)) {
-        lock();
+        lock(false);
         current = randPiece();
-        if (current.hasCollisionNow()) { endGame(); return; }
+        if (current.hasCollisionNow()) {
+          endGame();
+          return;
+        }
         renderAll();
       }
     };
@@ -348,24 +444,40 @@ const tetrisGame = () => {
     const dropToBottom = () => {
       const yy = landingY(0);
       y = yy;
-      lock();
+      lock(true);
       current = randPiece();
-      if (current.hasCollisionNow()) { endGame(); return; }
+      if (current.hasCollisionNow()) {
+        endGame();
+        return;
+      }
       renderAll();
     };
 
     const moveLeft = () => { move(-1, 0); };
     const moveRight = () => { move(1, 0); };
 
-    const lock = () => {
+    const lock = (fromHardDrop = false) => {
       for (let r = 0; r < active.length; r += 1) {
         for (let c = 0; c < active.length; c += 1) {
           if (!active[r][c]) continue;
-          if (y + r < 0) { endGame(); return; }
+
+          if (y + r < 0) {
+            endGame();
+            return;
+          }
+
           board[y + r][x + c] = color;
         }
       }
+
       clearLines();
+
+      if (fromHardDrop) {
+        playSound('drop');
+      } else {
+        playSound('place');
+      }
+
       updateScore();
     };
 
@@ -389,32 +501,47 @@ const tetrisGame = () => {
   let lines = 0;
 
   const clearLines = () => {
-    let linesCleared = 0
+    let linesCleared = 0;
 
     for (let r = 0; r < ROWS; r += 1) {
       let full = true;
       for (let c = 0; c < COLS; c += 1) {
-        if (board[r][c] === VACANT) { full = false; break; }
+        if (board[r][c] === VACANT) {
+          full = false;
+          break;
+        }
       }
+
       if (full) {
         for (let y = r; y > 0; y -= 1) {
           for (let c = 0; c < COLS; c += 1) {
             board[y][c] = board[y - 1][c];
           }
         }
-        for (let c = 0; c < COLS; c += 1) board[0][c] = VACANT;
+        for (let c = 0; c < COLS; c += 1) {
+          board[0][c] = VACANT;
+        }
+
         score += 10;
         linesCleared += 1;
       }
     }
 
     if (linesCleared >= 1) {
-      lines += linesCleared
+      lines += linesCleared;
     }
 
     if (linesCleared >= 3) {
       score += linesCleared * 10;
     }
+
+    if (linesCleared >= 3) {
+      playSound('multiclear');
+    } else if (linesCleared > 0) {
+      playSound('clear');
+    }
+
+    return linesCleared;
   };
 
   const updateScore = () => { gameScore.textContent = String(score); };
@@ -654,11 +781,14 @@ const tetrisGame = () => {
 
   const endGame = () => {
     stopGame();
+    clearSounds();
+    playSound('end');
     try { fullscreenOff(gameBoard); } catch (e) { }
     showGameResult();
   };
 
   const init = () => {
+    preloadSounds();
     renderAll();
     updateGameBoardScale();
     window.addEventListener('keydown', onKeyDown, { passive: false });
