@@ -2,105 +2,11 @@ const tetrisGame = () => {
   const gameResults = document.getElementById('gameResults');
   const gameScore = document.getElementById('gameScore');
   const gameBoard = document.getElementById('gameBoard');
-  const fullscreenBtn = document.getElementById('fullscreen');
-  const muteBtn = document.getElementById('muteSounds');
   const ctx = gameBoard?.getContext('2d');
   if (!gameResults || !gameScore || !gameBoard || !ctx) {
     console.error('Missing DOM elements: #gameResults, #gameScore or #gameBoard');
     return;
   }
-
-  const SOUND_PATH = 'sounds/';
-
-  let isMuted = false;
-
-  const muteSounds = (mute) => {
-    isMuted = mute;
-
-    if (isMuted) {
-      Object.values(soundBank).forEach(audio => {
-        try {
-          audio.pause();
-        } catch (e) {
-          console.warn(e)
-        }
-      });
-    }
-  };
-
-  const preloadSounds = () => {
-    Object.values(soundBank).forEach((audio) => {
-      try {
-        audio.load();
-      } catch (e) {
-        console.warn(e)
-      }
-    });
-  };
-
-  const createSound = (name) => {
-    const audio = document.createElement('audio');
-    audio.preload = 'auto';
-
-    const sources = [
-      { ext: 'ogg', type: 'audio/ogg' },
-      { ext: 'mp3', type: 'audio/mpeg' },
-    ];
-
-    sources.forEach(({ ext, type }) => {
-      const src = document.createElement('source');
-      src.src = `${SOUND_PATH}${name}.${ext}`;
-      src.type = type;
-      audio.appendChild(src);
-    });
-
-    return audio;
-  };
-
-  const soundBank = {
-    place: createSound('place'),
-    drop: createSound('drop'),
-    clear: createSound('clear'),
-    multiclear: createSound('multiclear'),
-    end: createSound('end'),
-  };
-
-  const playSound = (name) => {
-    if (isMuted) return;
-
-    const audio = soundBank[name];
-    if (!audio) return;
-    try {
-      audio.currentTime = 0;
-      const promise = audio.play();
-      if (promise && typeof promise.catch === 'function') {
-        promise.catch(() => { });
-      }
-    } catch (e) {
-      console.warn(e)
-    }
-  };
-
-  const clearSounds = () => {
-    Object.values(soundBank).forEach(audio => {
-      try {
-        audio.pause();
-        audio.currentTime = 0;
-      } catch (e) {
-        console.warn(e)
-      }
-    });
-  };
-
-  if (muteBtn) {
-    muteBtn.addEventListener('click', () => {
-      muteBtn.classList.toggle('active');
-
-      const muted = muteBtn.classList.contains('active');
-      muteSounds(muted);
-    });
-  };
-
 
   const ROWS = 22;
   const COLS = 12;
@@ -108,16 +14,6 @@ const tetrisGame = () => {
   let SQ = 29;
   const VACANT = '#ffffff';
   let STROKE = '#f8f8f8';
-
-  if (fullscreenBtn && gameBoard) {
-    fullscreenBtn.addEventListener('click', () => {
-      if (isFullscreen(gameBoard)) {
-        fullscreenOff(gameBoard);
-      } else {
-        fullscreenOn(gameBoard);
-      }
-    });
-  }
 
   const drawSquare = (x, y, color) => {
     ctx.lineWidth = 1;
@@ -783,12 +679,11 @@ const tetrisGame = () => {
     stopGame();
     clearSounds();
     playSound('end');
-    try { fullscreenOff(gameBoard); } catch (e) { }
+    fullscreenOff(gameBoard);
     showGameResult();
   };
 
   const init = () => {
-    preloadSounds();
     renderAll();
     updateGameBoardScale();
     window.addEventListener('keydown', onKeyDown, { passive: false });
@@ -813,7 +708,7 @@ const tetrisGame = () => {
 
   init();
 
-  // --- Opcjonal API ---
+  // --- Optional API ---
   return {
     stop: () => { running = false; },
     start: () => { if (!running) { running = true; requestAnimationFrame(loop); } },
@@ -833,6 +728,114 @@ const tetrisGame = () => {
     },
   };
 };
+
+// Sounds functions
+const SOUND_PATH = 'sounds/';
+let isMuted = false;
+
+const muteBtn = document.getElementById('muteSounds');
+
+if (muteBtn) {
+  muteBtn.addEventListener('click', () => {
+    muteBtn.classList.toggle('active');
+
+    const muted = muteBtn.classList.contains('active');
+    muteSounds(muted);
+  });
+};
+
+const preloadSounds = () => {
+  Object.values(soundBank).forEach((audio) => {
+    try {
+      audio.load();
+    } catch (e) {
+      console.warn('Preload sounds error: ' + e)
+    }
+  });
+};
+
+const createSound = (name) => {
+  const audio = document.createElement('audio');
+  audio.preload = 'auto';
+
+  const sources = [
+    { ext: 'ogg', type: 'audio/ogg' },
+    { ext: 'mp3', type: 'audio/mpeg' },
+  ];
+
+  sources.forEach(({ ext, type }) => {
+    const src = document.createElement('source');
+    src.src = `${SOUND_PATH}${name}.${ext}`;
+    src.type = type;
+    audio.appendChild(src);
+  });
+
+  return audio;
+};
+
+const soundBank = {
+  place: createSound('place'),
+  drop: createSound('drop'),
+  clear: createSound('clear'),
+  multiclear: createSound('multiclear'),
+  end: createSound('end'),
+};
+
+const playSound = (name) => {
+  if (isMuted) return;
+
+  const audio = soundBank[name];
+  if (!audio) return;
+  try {
+    audio.currentTime = 0;
+    const promise = audio.play();
+    if (promise && typeof promise.catch === 'function') {
+      promise.catch(() => { });
+    }
+  } catch (e) {
+    console.warn('Play sound error: ' + e)
+  }
+};
+
+const clearSounds = () => {
+  Object.values(soundBank).forEach(audio => {
+    try {
+      audio.pause();
+      audio.currentTime = 0;
+    } catch (e) {
+      console.warn('Clear sounds error: ' + e)
+    }
+  });
+};
+
+const muteSounds = (mute) => {
+  isMuted = mute;
+
+  if (isMuted) {
+    Object.values(soundBank).forEach(audio => {
+      try {
+        audio.pause();
+      } catch (e) {
+        console.warn('Mute sounds error: ' + e)
+      }
+    });
+  }
+};
+
+preloadSounds();
+
+// Fullscreen functions
+const fullscreenBtn = document.getElementById('fullscreen');
+
+if (fullscreenBtn && gameBoard) {
+  fullscreenBtn.addEventListener('click', () => {
+    if (isFullscreen(gameBoard)) {
+      fullscreenOff(gameBoard);
+    } else {
+      fullscreenOn(gameBoard);
+    }
+  });
+}
 
 const isFullscreen = (el) =>
   document.fullscreenElement === el ||

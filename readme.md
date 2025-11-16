@@ -26,7 +26,8 @@ JavaScript version of Tetris Game created using canvas element.
 3. "clear" - the sound played after a line being created from elements
 4. "multiclear" - the sound played after more or exact 3 lines being created from elements
 5. "end" - the sound played at the end of the game
-Sounds have to be in "sounds" folder.
+
+All sounds have to be in "sounds" folder.
 
 # Game Preview
 
