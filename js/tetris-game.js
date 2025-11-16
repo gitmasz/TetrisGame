@@ -707,26 +707,6 @@ const tetrisGame = () => {
   };
 
   init();
-
-  // --- Optional API ---
-  return {
-    stop: () => { running = false; },
-    start: () => { if (!running) { running = true; requestAnimationFrame(loop); } },
-    reset: () => {
-      for (let r = 0; r < ROWS; r += 1)
-        for (let c = 0; c < COLS; c += 1)
-          board[r][c] = VACANT;
-      score = 0; updateScore();
-      current = randPiece();
-      if (current.hasCollisionNow()) { endGame(); return; }
-      dropStart = performance.now();
-      horizontalPreview = null;
-      renderAll();
-      updateGameBoardScale();
-      running = true;
-      requestAnimationFrame(loop);
-    },
-  };
 };
 
 // Sounds functions
