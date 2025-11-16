@@ -36,6 +36,33 @@ const tetrisGame = () => {
     ctx.restore();
   };
 
+  const drawPlayBtn = () => {
+    const cx = (COLS * SQ) / 2;
+    const cy = (ROWS * SQ) / 2;
+    const radius = SQ * 1.2;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+
+    ctx.beginPath();
+    const triWidth = radius * 0.9;
+    const triHeight = radius * 1.2;
+
+    ctx.moveTo(cx - triWidth * 0.3, cy - triHeight * 0.5);
+    ctx.lineTo(cx - triWidth * 0.3, cy + triHeight * 0.5);
+    ctx.lineTo(cx + triWidth * 0.6, cy);
+    ctx.closePath();
+
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    ctx.restore();
+  };
+
   const createBoard = () =>
     Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => VACANT));
   const board = createBoard();
@@ -646,6 +673,28 @@ const tetrisGame = () => {
     renderAll();
   };
 
+  const startGame = () => {
+    updateGameBoardScale();
+    window.addEventListener('keydown', onKeyDown, { passive: false });
+    setupPointerControls();
+    requestAnimationFrame(loop);
+
+    window.addEventListener('resize', updateGameBoardScale);
+    window.addEventListener('orientationchange', updateGameBoardScale);
+
+    const onFullScreenChange = () => {
+      if (typeof isFullscreen === 'function' && isFullscreen(gameBoard)) {
+        STROKE = '#eeeeee';
+      } else {
+        STROKE = '#f8f8f8';
+      }
+      updateGameBoardScale();
+    };
+    document.addEventListener('fullscreenchange', onFullScreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullScreenChange);
+    document.addEventListener('msfullscreenchange', onFullScreenChange);
+  };
+
   const stopGame = () => {
     running = false;
 
@@ -683,15 +732,16 @@ const tetrisGame = () => {
     showGameResult();
   };
 
-  const init = () => {
-    renderAll();
-    updateGameBoardScale();
-    window.addEventListener('keydown', onKeyDown, { passive: false });
-    setupPointerControls();
-    requestAnimationFrame(loop);
+  const initGame = () => {
+    const initDraw = () => {
+      updateGameBoardScale();
+      drawPlayBtn();
+    }
 
-    window.addEventListener('resize', updateGameBoardScale);
-    window.addEventListener('orientationchange', updateGameBoardScale);
+    initDraw();
+
+    window.addEventListener('resize', initDraw);
+    window.addEventListener('orientationchange', initDraw);
 
     const onFullScreenChange = () => {
       if (typeof isFullscreen === 'function' && isFullscreen(gameBoard)) {
@@ -699,14 +749,33 @@ const tetrisGame = () => {
       } else {
         STROKE = '#f8f8f8';
       }
-      updateGameBoardScale();
+      initDraw();
     };
     document.addEventListener('fullscreenchange', onFullScreenChange);
     document.addEventListener('webkitfullscreenchange', onFullScreenChange);
     document.addEventListener('msfullscreenchange', onFullScreenChange);
+
+    const startOnUserInput = (event) => {
+      event.preventDefault();
+
+      gameBoard.removeEventListener('click', startOnUserInput);
+      gameBoard.removeEventListener('touchstart', startOnUserInput);
+
+      window.removeEventListener('resize', initDraw);
+      window.removeEventListener('orientationchange', initDraw);
+
+      document.removeEventListener('fullscreenchange', onFullScreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullScreenChange);
+      document.removeEventListener('msfullscreenchange', onFullScreenChange);
+
+      startGame();
+    };
+
+    gameBoard.addEventListener('click', startOnUserInput, { passive: false });
+    gameBoard.addEventListener('touchstart', startOnUserInput, { passive: false });
   };
 
-  init();
+  initGame();
 };
 
 // Sounds functions
