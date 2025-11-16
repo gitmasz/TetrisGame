@@ -106,6 +106,14 @@ p {
   background: #f8f8f8;
 }
 
+.audio-settings {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  position: relative;
+  gap: 15px;
+}
+
 .settings-button {
   display: block;
   position: relative;

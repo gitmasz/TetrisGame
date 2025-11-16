@@ -674,6 +674,8 @@ const tetrisGame = () => {
   };
 
   const startGame = () => {
+    if (isTune) playMusic();
+
     updateGameBoardScale();
     window.addEventListener('keydown', onKeyDown, { passive: false });
     setupPointerControls();
@@ -726,6 +728,7 @@ const tetrisGame = () => {
 
   const endGame = () => {
     stopGame();
+    stopMusic();
     clearSounds();
     playSound('end');
     fullscreenOff(gameBoard);
@@ -872,6 +875,112 @@ const muteSounds = (mute) => {
 };
 
 preloadSounds();
+
+// Music functions
+const MUSIC_PATCH = 'music/';
+let isTune = true;
+let currentMusic = null;
+
+const tuneBtn = document.getElementById('tuneMusic');
+
+if (tuneBtn) {
+  tuneBtn.addEventListener('click', () => {
+    if (isTune) {
+      stopMusic();
+    } else {
+      isTune = true;
+      tuneBtn.classList.remove('active');
+      playMusic();
+    }
+  });
+};
+
+const preloadMusic = () => {
+  Object.values(musicBank).forEach((audio) => {
+    try {
+      audio.load();
+    } catch (e) {
+      console.warn('Preload music error: ' + e)
+    }
+  });
+};
+
+const createMusic = (name) => {
+  const audio = document.createElement('audio');
+  audio.preload = 'auto';
+  audio.volume = 0.6;
+  audio.loop = true;
+
+  const sources = [
+    { ext: 'ogg', type: 'audio/ogg' },
+    { ext: 'mp3', type: 'audio/mpeg' },
+  ];
+
+  sources.forEach(({ ext, type }) => {
+    const src = document.createElement('source');
+    src.src = `${MUSIC_PATCH}${name}.${ext}`;
+    src.type = type;
+    audio.appendChild(src);
+  });
+
+  return audio;
+};
+
+const musicBank = {
+  loop1: createMusic('loop1'),
+  loop2: createMusic('loop2'),
+  loop3: createMusic('loop3'),
+};
+
+const playMusic = () => {
+  if (!isTune) return;
+
+  const keys = Object.keys(musicBank);
+  if (!keys.length) return;
+
+  const randomKey = keys[Math.floor(Math.random() * keys.length)];
+  const audio = musicBank[randomKey];
+
+  if (currentMusic && currentMusic !== audio) {
+    try {
+      currentMusic.pause();
+      currentMusic.currentTime = 0;
+    } catch (e) {
+      console.warn('Play music error: ' + e)
+    }
+  }
+
+  currentMusic = audio;
+
+  if (tuneBtn) {
+    tuneBtn.classList.remove('active');
+  }
+
+  try {
+    currentMusic.currentTime = 0;
+    const p = currentMusic.play();
+    if (p?.catch) p.catch(() => { });
+  } catch (e) {
+    console.warn('Play music error: ' + e)
+  }
+};
+
+const stopMusic = () => {
+  if (currentMusic) {
+    try {
+      currentMusic.pause();
+      currentMusic.currentTime = 0;
+    } catch (e) {
+      console.warn('Stop music error: ' + e)
+    }
+  }
+  isTune = false;
+  if (tuneBtn) {
+    tuneBtn.classList.add('active');
+  }
+};
+
+preloadMusic();
 
 // Fullscreen functions
 const fullscreenBtn = document.getElementById('fullscreen');
