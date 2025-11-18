@@ -451,6 +451,7 @@ const tetrisGame = () => {
     }
 
     if (linesCleared >= 1) {
+      playMusic();
       lines += linesCleared;
     }
 
@@ -880,6 +881,7 @@ preloadSounds();
 const MUSIC_PATCH = 'music/';
 let isTune = true;
 let currentMusic = null;
+let currentMusicKey = null;
 
 const tuneBtn = document.getElementById('tuneMusic');
 
@@ -938,6 +940,13 @@ const playMusic = () => {
   const keys = Object.keys(musicBank);
   if (!keys.length) return;
 
+  if (currentMusicKey !== null)  {
+    const keyIndex = keys.indexOf(currentMusicKey);
+    if (keyIndex !== -1) {
+      keys.splice(keyIndex, 1);
+    };
+  };
+
   const randomKey = keys[Math.floor(Math.random() * keys.length)];
   const audio = musicBank[randomKey];
 
@@ -946,11 +955,12 @@ const playMusic = () => {
       currentMusic.pause();
       currentMusic.currentTime = 0;
     } catch (e) {
-      console.warn('Play music error: ' + e)
+      console.warn('Play music could not stop previous track: ' + e)
     }
   }
 
   currentMusic = audio;
+  currentMusicKey = randomKey;
 
   if (tuneBtn) {
     tuneBtn.classList.remove('active');
@@ -958,8 +968,10 @@ const playMusic = () => {
 
   try {
     currentMusic.currentTime = 0;
-    const p = currentMusic.play();
-    if (p?.catch) p.catch(() => { });
+    const promise = currentMusic.play();
+    if (promise && typeof promise.catch === 'function') {
+      promise.catch(() => { });
+    }
   } catch (e) {
     console.warn('Play music error: ' + e)
   }
