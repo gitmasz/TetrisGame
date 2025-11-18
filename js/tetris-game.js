@@ -8,72 +8,16 @@ const tetrisGame = () => {
     return;
   }
 
+  let score = 0;
+  let lines = 0;
+  const speed = 600;
+
   const ROWS = 22;
   const COLS = 12;
 
-  let SQ = 29;
+  let SQUARE = 29;
   const VACANT = '#ffffff';
   let STROKE = '#f8f8f8';
-
-  const drawSquare = (x, y, color) => {
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = STROKE;
-    ctx.strokeRect(x * SQ, y * SQ, SQ, SQ);
-
-    ctx.fillStyle = color;
-    ctx.beginPath();
-    ctx.fillRect(x * SQ + 2, y * SQ + 2, SQ - 4, SQ - 4);
-    ctx.strokeRect(x * SQ, y * SQ, SQ, SQ);
-    ctx.closePath();
-    ctx.fill();
-    ctx.stroke();
-  };
-
-  const drawSquareGhost = (x, y, color) => {
-    ctx.save();
-    ctx.globalAlpha = 0.35;
-    drawSquare(x, y, color);
-    ctx.restore();
-  };
-
-  const drawPlayBtn = () => {
-    const cx = (COLS * SQ) / 2;
-    const cy = (ROWS * SQ) / 2;
-    const radius = SQ * 1.2;
-
-    ctx.save();
-
-    ctx.beginPath();
-    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
-    ctx.fillStyle = '#000';
-    ctx.fill();
-
-    ctx.beginPath();
-    const triWidth = radius * 0.9;
-    const triHeight = radius * 1.2;
-
-    ctx.moveTo(cx - triWidth * 0.3, cy - triHeight * 0.5);
-    ctx.lineTo(cx - triWidth * 0.3, cy + triHeight * 0.5);
-    ctx.lineTo(cx + triWidth * 0.6, cy);
-    ctx.closePath();
-
-    ctx.fillStyle = '#fff';
-    ctx.fill();
-
-    ctx.restore();
-  };
-
-  const createBoard = () =>
-    Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => VACANT));
-  const board = createBoard();
-
-  const drawBoard = () => {
-    for (let r = 0; r < ROWS; r += 1) {
-      for (let c = 0; c < COLS; c += 1) {
-        drawSquare(c, r, board[r][c]);
-      }
-    }
-  };
 
   // Tetris pieces (7 pieces)
 
@@ -236,7 +180,74 @@ const tetrisGame = () => {
     [TZ, '#ed444a'],
   ];
 
-  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
+  // Drawing functions
+  const drawSquare = (x, y, color) => {
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = STROKE;
+    ctx.strokeRect(x * SQUARE, y * SQUARE, SQUARE, SQUARE);
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.fillRect(x * SQUARE + 2, y * SQUARE + 2, SQUARE - 4, SQUARE - 4);
+    ctx.strokeRect(x * SQUARE, y * SQUARE, SQUARE, SQUARE);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+  };
+
+  const drawSquareGhost = (x, y, color) => {
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    drawSquare(x, y, color);
+    ctx.restore();
+  };
+
+  const drawPlayBtn = () => {
+    const cx = (COLS * SQUARE) / 2;
+    const cy = (ROWS * SQUARE) / 2;
+    const radius = SQUARE * 1.2;
+
+    ctx.save();
+
+    ctx.beginPath();
+    ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+    ctx.fillStyle = '#000';
+    ctx.fill();
+
+    ctx.beginPath();
+    const triWidth = radius * 0.9;
+    const triHeight = radius * 1.2;
+
+    ctx.moveTo(cx - triWidth * 0.3, cy - triHeight * 0.5);
+    ctx.lineTo(cx - triWidth * 0.3, cy + triHeight * 0.5);
+    ctx.lineTo(cx + triWidth * 0.6, cy);
+    ctx.closePath();
+
+    ctx.fillStyle = '#fff';
+    ctx.fill();
+
+    ctx.restore();
+  };
+
+  const createBoard = () => Array.from({ length: ROWS }, () => Array.from({ length: COLS }, () => VACANT));
+  const board = createBoard();
+
+  const drawBoard = () => {
+    for (let r = 0; r < ROWS; r += 1) {
+      for (let c = 0; c < COLS; c += 1) {
+        drawSquare(c, r, board[r][c]);
+      }
+    }
+  };
+
+  let horizontalPreview = null;
+
+  const renderAll = () => {
+    drawBoard();
+    if (horizontalPreview) currentPiece.drawHorizontalGhost(horizontalPreview.dxSteps);
+    else currentPiece.drawLandingGhost();
+    currentPiece.draw();
+  };
 
   const randPiece = () => {
     if (!randPiece._bag || randPiece._bag.length === 0) {
@@ -264,17 +275,10 @@ const tetrisGame = () => {
     }
     return 0;
   };
-  const spawnXFor = (shape) =>
-    clamp(Math.floor((COLS - shape.length) / 2), 0, Math.max(0, COLS - shape.length));
 
-  let horizontalPreview = null;
+  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
 
-  const renderAll = () => {
-    drawBoard();
-    if (horizontalPreview) current.drawHorizontalGhost(horizontalPreview.dxSteps);
-    else current.drawLandingGhost();
-    current.draw();
-  };
+  const spawnXFor = (shape) => clamp(Math.floor((COLS - shape.length) / 2), 0, Math.max(0, COLS - shape.length));
 
   const makePiece = (shapes, color) => {
     let rotIndex = 0;
@@ -355,8 +359,8 @@ const tetrisGame = () => {
     const moveDown = () => {
       if (!move(0, 1)) {
         lock(false);
-        current = randPiece();
-        if (current.hasCollisionNow()) {
+        currentPiece = randPiece();
+        if (currentPiece.hasCollisionNow()) {
           endGame();
           return;
         }
@@ -368,8 +372,8 @@ const tetrisGame = () => {
       const yy = landingY(0);
       y = yy;
       lock(true);
-      current = randPiece();
-      if (current.hasCollisionNow()) {
+      currentPiece = randPiece();
+      if (currentPiece.hasCollisionNow()) {
         endGame();
         return;
       }
@@ -420,9 +424,17 @@ const tetrisGame = () => {
     };
   };
 
-  let score = 0;
-  let lines = 0;
+  // Starting variables
+  let dropStart = performance.now();
+  let running = true;
+  let currentPiece = randPiece();
 
+  if (currentPiece.hasCollisionNow()) {
+    endGame();
+    return;
+  }
+
+  // Goal functions
   const clearLines = () => {
     let linesCleared = 0;
 
@@ -470,30 +482,25 @@ const tetrisGame = () => {
 
   const updateScore = () => { gameScore.textContent = String(score); };
 
-  let dropStart = performance.now();
-  let running = true;
-  let current = randPiece();
-  if (current.hasCollisionNow()) { endGame(); return; }
-
-  const tickMs = 600;
-
+  // Game loop function
   const loop = (now) => {
     const delta = now - dropStart;
-    if (delta > tickMs) {
-      current.moveDown();
+    if (delta > speed) {
+      currentPiece.moveDown();
       dropStart = performance.now();
     }
     if (running) requestAnimationFrame(loop);
   };
 
+  // Keyboard controls
   const gamekeys = new Set(['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' ']);
 
   const keymap = new Map([
-    ['ArrowLeft', () => { current.moveLeft(); dropStart = performance.now(); }],
-    ['ArrowRight', () => { current.moveRight(); dropStart = performance.now(); }],
-    ['ArrowUp', () => { current.rotate(); dropStart = performance.now(); }],
-    [' ', () => { current.dropToBottom(); dropStart = performance.now(); }],
-    ['ArrowDown', () => { current.moveDown(); }],
+    ['ArrowLeft', () => { currentPiece.moveLeft(); dropStart = performance.now(); }],
+    ['ArrowRight', () => { currentPiece.moveRight(); dropStart = performance.now(); }],
+    ['ArrowUp', () => { currentPiece.rotate(); dropStart = performance.now(); }],
+    [' ', () => { currentPiece.dropToBottom(); dropStart = performance.now(); }],
+    ['ArrowDown', () => { currentPiece.moveDown(); }],
   ]);
 
   const onKeyDown = (e) => {
@@ -508,6 +515,7 @@ const tetrisGame = () => {
     if (handler) handler();
   };
 
+  // Mouse and touch controls
   const pointerHandlers = {
     onMouseDown: null,
     onMouseMove: null,
@@ -519,9 +527,9 @@ const tetrisGame = () => {
   };
 
   const setupPointerControls = () => {
-    const TAP_THRESH_X = Math.max(12, Math.round(SQ * 0.4));
-    const TAP_THRESH_Y = Math.max(12, Math.round(SQ * 0.4));
-    const ROUND_TOL = Math.round(SQ * 0.35);
+    const TAP_THRESH_X = Math.max(12, Math.round(SQUARE * 0.4));
+    const TAP_THRESH_Y = Math.max(12, Math.round(SQUARE * 0.4));
+    const ROUND_TOL = Math.round(SQUARE * 0.35);
 
     const dispatchKeyNTimes = (key, times) => {
       const n = clamp(times, 0, COLS);
@@ -533,7 +541,7 @@ const tetrisGame = () => {
 
     const stepsFromPixels = (absPx) => {
       if (absPx < TAP_THRESH_X) return 0;
-      return clamp(Math.round((absPx + ROUND_TOL) / SQ), 0, COLS);
+      return clamp(Math.round((absPx + ROUND_TOL) / SQUARE), 0, COLS);
     };
 
     const updateHorizontalPreview = (dx) => {
@@ -639,9 +647,10 @@ const tetrisGame = () => {
     gameBoard.addEventListener('touchend', pointerHandlers.onTouchEnd, { passive: false });
   };
 
+  // Responsiveness functions
   const updateGameBoardScale = () => {
     const dpr = window.devicePixelRatio || 1;
-    const isFS = typeof isFullscreen === 'function' && isFullscreen(gameBoard);
+    const isFS = isFullscreen(gameBoard);
 
     let cssW, cssH, sq;
 
@@ -666,7 +675,7 @@ const tetrisGame = () => {
       gameBoard.style.height = cssH + 'px';
     }
 
-    SQ = sq;
+    SQUARE = sq;
     gameBoard.width = Math.floor(cssW * dpr);
     gameBoard.height = Math.floor(cssH * dpr);
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -674,6 +683,7 @@ const tetrisGame = () => {
     renderAll();
   };
 
+  // Start Game functions
   const startGame = () => {
     if (isTune) playMusic();
 
@@ -686,7 +696,7 @@ const tetrisGame = () => {
     window.addEventListener('orientationchange', updateGameBoardScale);
 
     const onFullScreenChange = () => {
-      if (typeof isFullscreen === 'function' && isFullscreen(gameBoard)) {
+      if (isFullscreen(gameBoard)) {
         STROKE = '#eeeeee';
       } else {
         STROKE = '#f8f8f8';
@@ -698,6 +708,7 @@ const tetrisGame = () => {
     document.addEventListener('msfullscreenchange', onFullScreenChange);
   };
 
+  // End Game functions
   const stopGame = () => {
     running = false;
 
@@ -736,6 +747,7 @@ const tetrisGame = () => {
     showGameResult();
   };
 
+  // Initiation functions
   const initGame = () => {
     const initDraw = () => {
       updateGameBoardScale();
@@ -748,7 +760,7 @@ const tetrisGame = () => {
     window.addEventListener('orientationchange', initDraw);
 
     const onFullScreenChange = () => {
-      if (typeof isFullscreen === 'function' && isFullscreen(gameBoard)) {
+      if (isFullscreen(gameBoard)) {
         STROKE = '#eeeeee';
       } else {
         STROKE = '#f8f8f8';
@@ -786,27 +798,6 @@ const tetrisGame = () => {
 const SOUND_PATH = 'sounds/';
 let isMuted = false;
 
-const muteBtn = document.getElementById('muteSounds');
-
-if (muteBtn) {
-  muteBtn.addEventListener('click', () => {
-    muteBtn.classList.toggle('active');
-
-    const muted = muteBtn.classList.contains('active');
-    muteSounds(muted);
-  });
-};
-
-const preloadSounds = () => {
-  Object.values(soundBank).forEach((audio) => {
-    try {
-      audio.load();
-    } catch (e) {
-      console.warn('Preload sounds error: ', e)
-    }
-  });
-};
-
 const createSound = (name) => {
   const audio = document.createElement('audio');
   audio.preload = 'auto';
@@ -832,6 +823,16 @@ const soundBank = {
   clear: createSound('clear'),
   multiclear: createSound('multiclear'),
   end: createSound('end'),
+};
+
+const preloadSounds = () => {
+  Object.values(soundBank).forEach((audio) => {
+    try {
+      audio.load();
+    } catch (e) {
+      console.warn('Preload sounds error: ', e)
+    }
+  });
 };
 
 const playSound = (name) => {
@@ -875,7 +876,18 @@ const muteSounds = (mute) => {
   }
 };
 
-preloadSounds();
+const initMuteBtn = () => {
+  const muteBtn = document.getElementById('muteSounds');
+
+  if (muteBtn) {
+    muteBtn.addEventListener('click', () => {
+      muteBtn.classList.toggle('active');
+
+      const muted = muteBtn.classList.contains('active');
+      muteSounds(muted);
+    });
+  };
+};
 
 // Music functions
 const MUSIC_PATCH = 'music/';
@@ -885,32 +897,10 @@ let currentMusicKey = null;
 
 const tuneBtn = document.getElementById('tuneMusic');
 
-if (tuneBtn) {
-  tuneBtn.addEventListener('click', () => {
-    if (isTune) {
-      stopMusic();
-    } else {
-      isTune = true;
-      tuneBtn.classList.remove('active');
-      playMusic();
-    }
-  });
-};
-
-const preloadMusic = () => {
-  Object.values(musicBank).forEach((audio) => {
-    try {
-      audio.load();
-    } catch (e) {
-      console.warn('Preload music error: ', e)
-    }
-  });
-};
-
 const createMusic = (name) => {
   const audio = document.createElement('audio');
   audio.preload = 'auto';
-  audio.volume = 0.6;
+  audio.volume = 0.4;
   audio.loop = true;
 
   const sources = [
@@ -934,13 +924,23 @@ const musicBank = {
   loop3: createMusic('loop3'),
 };
 
+const preloadMusic = () => {
+  Object.values(musicBank).forEach((audio) => {
+    try {
+      audio.load();
+    } catch (e) {
+      console.warn('Preload music error: ', e)
+    }
+  });
+};
+
 const playMusic = () => {
   if (!isTune) return;
 
   const keys = Object.keys(musicBank);
   if (!keys.length) return;
 
-  if (currentMusicKey !== null)  {
+  if (currentMusicKey !== null) {
     const keyIndex = keys.indexOf(currentMusicKey);
     if (keyIndex !== -1) {
       keys.splice(keyIndex, 1);
@@ -992,25 +992,25 @@ const stopMusic = () => {
   }
 };
 
-preloadMusic();
+const initTuneBtn = () => {
+  if (tuneBtn) {
+    tuneBtn.addEventListener('click', () => {
+      if (isTune) {
+        stopMusic();
+      } else {
+        isTune = true;
+        tuneBtn.classList.remove('active');
+        playMusic();
+      }
+    });
+  };
+};
 
 // Fullscreen functions
-const fullscreenBtn = document.getElementById('fullscreen');
-
-if (fullscreenBtn && gameBoard) {
-  fullscreenBtn.addEventListener('click', () => {
-    if (isFullscreen(gameBoard)) {
-      fullscreenOff(gameBoard);
-    } else {
-      fullscreenOn(gameBoard);
-    }
-  });
-}
-
-const isFullscreen = (el) =>
-  document.fullscreenElement === el ||
-  document.webkitFullscreenElement === el ||
-  document.msFullscreenElement === el;
+const isFullscreen = (canvas) =>
+  document.fullscreenElement === canvas ||
+  document.webkitFullscreenElement === canvas ||
+  document.msFullscreenElement === canvas;
 
 const fullscreenOn = (canvas) => {
   if (!canvas) return false;
@@ -1047,4 +1047,25 @@ const fullscreenOff = (canvas) => {
   return false;
 };
 
-document.addEventListener('DOMContentLoaded', () => { tetrisGame(); });
+const initFullscreenBtn = (canvas) => {
+  const fullscreenBtn = document.getElementById('fullscreen');
+
+  if (fullscreenBtn && canvas) {
+    fullscreenBtn.addEventListener('click', () => {
+      if (isFullscreen(canvas)) {
+        fullscreenOff(canvas);
+      } else {
+        fullscreenOn(canvas);
+      }
+    });
+  }
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  preloadMusic();
+  preloadSounds();
+  initTuneBtn();
+  initMuteBtn();
+  initFullscreenBtn(gameBoard);
+  tetrisGame();
+});
