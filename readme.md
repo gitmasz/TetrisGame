@@ -12,10 +12,11 @@ JavaScript version of Tetris Game created using canvas element.
 8. As an element falls, rotates, or moves, a landing ghost appears, showing where it will land after it drops.
 9. As you move an element sideways with the mouse or touch, a horizontal ghost appears, showing where it will land after you release the mouse button (for mouse controls) or your finger (for touch controls).
 10. The score is updated continuously. At the end of the game, the number of cleared lines is also displayed.
-11. The game can be switched to full-screen mode (only the canvas, removing everything unnecessary for gameplay). Once you've finished playing, full-screen mode automatically deactivates, displaying a "Game Over" message along with a gameplay summary.
+11. The game can be switched to fullscreen mode (only the canvas, removing everything unnecessary for gameplay). Once you've finished playing, fullscreen mode automatically deactivates, displaying a "Game Over" message along with a gameplay summary.
 12. The game have sound feature for some events like dropping element or clearing lines. Sounds can be switched on and off.
-13. The game have background music playing feature. Looped music theme are randomly selected. Music can be switched on and off.
+13. The game have background music playing feature. Looped music theme are randomly selected. After clear one or more lines, music theme are selected again (excluding current music theme). Music can be switched on and off.
 14. Sounds and music can be switched separately.
+15. The game have a pause function that also turns off the music playing in the background.
 
 ## Game controls:
 1. By keyboard: Up Arrow (rotate element), Left Arrow (move element to the left by one square), Right Arrow (move element to the right by one square), Down Arrow (move element down by one square), Space (drops element to the bottom immediately)
