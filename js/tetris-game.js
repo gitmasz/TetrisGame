@@ -2,6 +2,7 @@ const tetrisGame = () => {
   const gameResults = document.getElementById('gameResults');
   const gameScore = document.getElementById('gameScore');
   const gameBoard = document.getElementById('gameBoard');
+  const pauseBtn = document.getElementById('pauseGame');
   const ctx = gameBoard?.getContext('2d');
   if (!gameResults || !gameScore || !gameBoard || !ctx) {
     console.error('Missing DOM elements: #gameResults, #gameScore or #gameBoard');
@@ -427,6 +428,7 @@ const tetrisGame = () => {
   // Starting variables
   let dropStart = performance.now();
   let running = true;
+  let paused = false;
   let currentPiece = randPiece();
 
   if (currentPiece.hasCollisionNow()) {
@@ -463,7 +465,7 @@ const tetrisGame = () => {
     }
 
     if (linesCleared >= 1) {
-      playMusic();
+      if (isTune) playMusic();
       lines += linesCleared;
     }
 
@@ -484,6 +486,13 @@ const tetrisGame = () => {
 
   // Game loop function
   const loop = (now) => {
+    if (!running) return;
+
+    if (paused) {
+      requestAnimationFrame(loop);
+      return;
+    }
+
     const delta = now - dropStart;
     if (delta > speed) {
       currentPiece.moveDown();
@@ -647,6 +656,17 @@ const tetrisGame = () => {
     gameBoard.addEventListener('touchend', pointerHandlers.onTouchEnd, { passive: false });
   };
 
+  const removePointerControls = () => {
+    if (pointerHandlers.onMouseDown) gameBoard.removeEventListener('mousedown', pointerHandlers.onMouseDown);
+    if (pointerHandlers.onMouseMove) gameBoard.removeEventListener('mousemove', pointerHandlers.onMouseMove);
+    if (pointerHandlers.onMouseUp) gameBoard.removeEventListener('mouseup', pointerHandlers.onMouseUp);
+    if (pointerHandlers.onMouseLeave) gameBoard.removeEventListener('mouseleave', pointerHandlers.onMouseLeave);
+
+    if (pointerHandlers.onTouchStart) gameBoard.removeEventListener('touchstart', pointerHandlers.onTouchStart);
+    if (pointerHandlers.onTouchMove) gameBoard.removeEventListener('touchmove', pointerHandlers.onTouchMove);
+    if (pointerHandlers.onTouchEnd) gameBoard.removeEventListener('touchend', pointerHandlers.onTouchEnd);
+  }
+
   // Responsiveness functions
   const updateGameBoardScale = () => {
     const dpr = window.devicePixelRatio || 1;
@@ -687,6 +707,8 @@ const tetrisGame = () => {
   const startGame = () => {
     if (isTune) playMusic();
 
+    initPauseBtn();
+
     updateGameBoardScale();
     window.addEventListener('keydown', onKeyDown, { passive: false });
     setupPointerControls();
@@ -708,20 +730,53 @@ const tetrisGame = () => {
     document.addEventListener('msfullscreenchange', onFullScreenChange);
   };
 
+  const pauseGame = () => {
+    if (!pauseBtn) return;
+
+    const isActive = pauseBtn.classList.contains('active');
+
+    if (isActive) {
+      paused = true;
+
+      window.removeEventListener('keydown', onKeyDown);
+      removePointerControls();
+
+      stopMusic();
+    } else {
+      paused = false;
+
+      window.addEventListener('keydown', onKeyDown, { passive: false });
+      setupPointerControls();
+
+      if (running) requestAnimationFrame(loop);
+    }
+  };
+
+  const switchPauseBtn = () => {
+    if (!pauseBtn) return;
+
+    pauseBtn.classList.toggle('disabled');
+  }
+
+  const initPauseBtn = () => {
+    if (!pauseBtn) return;
+
+    switchPauseBtn();
+
+    pauseBtn.addEventListener('click', () => {
+      pauseBtn.classList.toggle('active');
+      pauseGame();
+    });
+  }
+
   // End Game functions
   const stopGame = () => {
     running = false;
 
+    switchPauseBtn();
+
     window.removeEventListener('keydown', onKeyDown);
-
-    if (pointerHandlers.onMouseDown) gameBoard.removeEventListener('mousedown', pointerHandlers.onMouseDown);
-    if (pointerHandlers.onMouseMove) gameBoard.removeEventListener('mousemove', pointerHandlers.onMouseMove);
-    if (pointerHandlers.onMouseUp) gameBoard.removeEventListener('mouseup', pointerHandlers.onMouseUp);
-    if (pointerHandlers.onMouseLeave) gameBoard.removeEventListener('mouseleave', pointerHandlers.onMouseLeave);
-
-    if (pointerHandlers.onTouchStart) gameBoard.removeEventListener('touchstart', pointerHandlers.onTouchStart);
-    if (pointerHandlers.onTouchMove) gameBoard.removeEventListener('touchmove', pointerHandlers.onTouchMove);
-    if (pointerHandlers.onTouchEnd) gameBoard.removeEventListener('touchend', pointerHandlers.onTouchEnd);
+    removePointerControls();
 
     horizontalPreview = null;
   };
