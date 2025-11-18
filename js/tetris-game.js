@@ -802,7 +802,7 @@ const preloadSounds = () => {
     try {
       audio.load();
     } catch (e) {
-      console.warn('Preload sounds error: ' + e)
+      console.warn('Preload sounds error: ', e)
     }
   });
 };
@@ -846,7 +846,7 @@ const playSound = (name) => {
       promise.catch(() => { });
     }
   } catch (e) {
-    console.warn('Play sound error: ' + e)
+    console.warn('Play sound error: ', e)
   }
 };
 
@@ -856,7 +856,7 @@ const clearSounds = () => {
       audio.pause();
       audio.currentTime = 0;
     } catch (e) {
-      console.warn('Clear sounds error: ' + e)
+      console.warn('Clear sounds error: ', e)
     }
   });
 };
@@ -869,7 +869,7 @@ const muteSounds = (mute) => {
       try {
         audio.pause();
       } catch (e) {
-        console.warn('Mute sounds error: ' + e)
+        console.warn('Mute sounds error: ', e)
       }
     });
   }
@@ -902,7 +902,7 @@ const preloadMusic = () => {
     try {
       audio.load();
     } catch (e) {
-      console.warn('Preload music error: ' + e)
+      console.warn('Preload music error: ', e)
     }
   });
 };
@@ -955,7 +955,7 @@ const playMusic = () => {
       currentMusic.pause();
       currentMusic.currentTime = 0;
     } catch (e) {
-      console.warn('Play music could not stop previous track: ' + e)
+      console.warn('Play music could not stop previous track: ', e)
     }
   }
 
@@ -973,7 +973,7 @@ const playMusic = () => {
       promise.catch(() => { });
     }
   } catch (e) {
-    console.warn('Play music error: ' + e)
+    console.warn('Play music error: ', e)
   }
 };
 
@@ -983,7 +983,7 @@ const stopMusic = () => {
       currentMusic.pause();
       currentMusic.currentTime = 0;
     } catch (e) {
-      console.warn('Stop music error: ' + e)
+      console.warn('Stop music error: ', e)
     }
   }
   isTune = false;
